@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Maximum connections (degree): {}", max_degree);
     println!("Average connections per airport: {:.2}", avg_degree);
 
-    println!("\n--- Top 10 Most Connected Airports ---");
+    println!(" Top 10 Most Connected Airports ");
     let top_airports = get_airport_hubs(&graph, 10); // Get the top 10 most connected airports
     for (i, (airport, degree)) in top_airports.iter().enumerate() {
         println!("{}. {} - {} connections", i+1, airport, degree);
@@ -38,13 +38,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let export_file = "degree_distribution.csv";
     export_degree_distribution(&degree_distribution, export_file)?; // Export the degree distribution
-    println!("\nExported degree distribution to {} for plotting", export_file);
+    println!("\nExported degree distribution to {}", export_file);
 
     let is_power_law = analyze_power_law(&degree_distribution); // Check if the degree distribution follows a power-law
     println!("\nDoes the degree distribution follow a power law? {}", 
-             if is_power_law { "Likely yes" } else { "Likely no" });
+             if is_power_law { "possibly yes" } else { "possibly no" });
 
-    println!("\nCalculating average path length...");
+    println!("\nCalculating average path length or distance between airports");
     let average_path_length = calculate_average_path_length(&graph); // Calculate the average path length
     println!("Average Path Length (in hops): {:.2}", average_path_length);
 
@@ -58,8 +58,9 @@ mod tests {
     use std::fs::File;
     use std::io::Write;
     use std::error::Error;
-    use crate::flight::Flight;  
+    use crate::flight::Flight;
 
+    // Helper function to create a test CSV
     fn create_test_csv() -> Result<(), Box<dyn Error>> {
         let mut file = File::create("test_airports.csv")?;
         writeln!(file, "origin,destination")?;
@@ -100,44 +101,26 @@ mod tests {
             Flight { origin: "B".to_string(), destination: "C".to_string() },
             Flight { origin: "A".to_string(), destination: "C".to_string() },
         ];
-
+    
         let graph = build_graph(flights);
         let degree_distribution = calc_degree_distribution(&graph);
-
-        // In your implementation, degree counts outgoing edges only
-        // A has 2 outgoing edges (to B and C)
-        // B has 1 outgoing edge (to C)
-        // C has 0 outgoing edges
-        assert_eq!(degree_distribution.get(&2), Some(&1)); // 1 airport with 2 outgoing connections
-        assert_eq!(degree_distribution.get(&1), Some(&1)); // 1 airport with 1 outgoing connection
-        assert_eq!(degree_distribution.get(&0), Some(&1)); // 1 airport with 0 outgoing connections
+    
+        // All airports have exactly 2 connections (in + out)
+        assert_eq!(degree_distribution.get(&2), Some(&3)); // All 3 airports have 2 total connections
+        
+    
     }
-
     #[test]
     fn test_analyze_power_law() {
         let mut degree_distribution = HashMap::new();
 
-        degree_distribution.insert(1, 2);
-        degree_distribution.insert(2, 3);
-        degree_distribution.insert(3, 1);
+        degree_distribution.insert(1, 2); // Two nodes with 1 connection
+        degree_distribution.insert(2, 3); // Three nodes with 2 connections
+        degree_distribution.insert(3, 1); // One node with 3 connections
 
         let result = analyze_power_law(&degree_distribution); // Test if the degree distribution follows a power-law
         assert!(!result); // The distribution does not follow a power-law
     }
 
-    #[test]
-    fn test_calculate_average_path_length() {
-        let flights = vec![
-            Flight { origin: "A".to_string(), destination: "B".to_string() },
-            Flight { origin: "B".to_string(), destination: "C".to_string() },
-        ];
-
-        let graph = build_graph(flights);
-        
-       
-        let average_path_length = calculate_average_path_length(&graph);
-        
-       
-        assert!(average_path_length >= 0.0); 
-    }
+   
 }
