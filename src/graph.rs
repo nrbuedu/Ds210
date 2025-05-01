@@ -40,10 +40,11 @@ pub fn calc_degree_distribution(graph: &DiGraph<String, i32>) -> HashMap<usize, 
     let mut degree_distribution = HashMap::new();
 
     for node in graph.node_indices() {
-        let degree = graph.edges(node)
-            .filter(|edge| edge.source() != edge.target())
-            .count();
-        *degree_distribution.entry(degree).or_insert(0) += 1;
+        // Count both in-degree and out-degree for each node
+        let in_degree = graph.edges_directed(node, petgraph::Direction::Incoming).count();
+        let out_degree = graph.edges_directed(node, petgraph::Direction::Outgoing).count();
+        let total_degree = in_degree + out_degree;
+        *degree_distribution.entry(total_degree).or_insert(0) += 1;
     }
 
     degree_distribution
